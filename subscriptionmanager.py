@@ -70,40 +70,6 @@ class SubscriptionManager:
         if not self.connection.ping()['result']:
             raise SubscriptionManagerError("Unable to obtain status from server, UEPConnection is likely not usable.")
 
-    def sendVirtGuests(self, domains):
-        """
-        Update consumer facts with info about virtual guests.
-
-        :param domain: List of guest UUIDs for current machine or list of
-            dictionaries in the format: [
-                {
-                    'guestId': <uuid of guest>,
-                    'attributes': { # supplemental list a attributes, supported are following:
-                        'hypervisorType': <type of hypervisor, e.g. QEMU>,
-                        'virtWhoType': <virtwho type of operation, e.g. libvirt>,
-                        'active': <1 if guest is active, 0 otherwise, -1 on error>
-                    },
-                },
-                ...
-            ]
-        :type domain: list of str or list of dict domains
-        """
-
-        # Sort the list
-        key = None
-        if len(domains) > 0:
-            if isinstance(domains[0], basestring):
-                key = "guestId"
-            domains.sort(key=key)
-
-        if key is not None:
-            self.logger.debug("Sending list of uuids: %s" % [domain[key] for domain in domains])
-        else:
-            self.logger.debug("Sending list of uuids: %s" % domains)
-
-        # Send list of guest uuids to the server
-        self.connection.updateConsumer(self.uuid(), guest_uuids=domains)
-
     def hypervisorCheckIn(self, owner, env, mapping, type=None):
         """ Send hosts to guests mapping to subscription manager. """
 
@@ -126,8 +92,3 @@ class SubscriptionManager:
         if not self.owner:
             self.owner = self.connection.getConsumer(self.uuid())['owner']['key']
         return self.owner
-
-    def getFacts(self):
-        """ Get fact for current consumer. """
-        self.consumer = self.connection.conn.request_get('/consumers/%s' % self.uuid())
-        return self.consumer['facts']

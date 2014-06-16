@@ -103,16 +103,7 @@ class VirtWho(object):
         if self.virt is None:
             self.virt = Manual(self.logger, self.options.hypervisor)
 
-    def send(self):
-        """
-        Send list of uuids to subscription manager
-
-        return - True if sending is successful, False otherwise
-        """
-        # Try to send it twice
-        return self._send(True)
-
-    def _send(self, retry):
+    def send(self, retry=True):
         """
         Send list of uuids to subscription manager. This method will call itself
         once if sending fails.
@@ -129,7 +120,7 @@ class VirtWho(object):
             exceptionCheck(e)
             if retry:
                 logger.exception("Unable to create connection:")
-                return self._send(False)
+                return self.send(False)
             else:
                 return False
 
@@ -144,7 +135,7 @@ class VirtWho(object):
             # Retry once
             if retry:
                 logger.exception("Error in communication with virt backend, trying to recover:")
-                return self._send(False)
+                return self.send(False)
             else:
                 return False
 
@@ -170,7 +161,7 @@ class VirtWho(object):
             # Retry once
             if retry:
                 logger.exception("Error in communication with subscription manager, trying to recover:")
-                return self._send(False)
+                return self.send(False)
             else:
                 return False
 
