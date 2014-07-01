@@ -210,12 +210,7 @@ def main():
 
     virtWho = VirtWho(logger, options)
     signal.signal(signal.SIGHUP, virtWho.queueReload)
-    try:
-        virtWho.checkConnections()
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except Exception:
-        pass
+    virtWho.checkConnections()
 
     logger.debug("Virt-who is running in manual mode")
 
