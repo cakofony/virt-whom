@@ -53,7 +53,7 @@ class SubscriptionManager:
         key = 'key.pem'
         self.cert_file = os.path.join(consumerCertDir, cert)
         self.key_file = os.path.join(consumerCertDir, key)
-        if not os.access(self.cert_file, os.R_OK):
+        if not os.access(self.cert_file, os.R_OK) or not os.access(self.key_file, os.R_OK):
             raise SubscriptionManagerError("Unable to read certificate, system is not registered or you are not root")
 
     def connect(self, Connection=rhsm_connection.UEPConnection):
@@ -67,7 +67,8 @@ class SubscriptionManager:
                 proxy_user=self.config.get('server', 'proxy_user'),
                 proxy_password=self.config.get('server', 'proxy_password'),
                 cert_file=self.cert_file, key_file=self.key_file)
-        if not self.connection.ping()['result']:
+        # Make sure that not only do we have a valid connection, but that we can also access ourselves
+        if not self.connection.getConsumer(self.uuid())['uuid']:
             raise SubscriptionManagerError("Unable to obtain status from server, UEPConnection is likely not usable.")
 
     def hypervisorCheckIn(self, owner, env, mapping, type=None):

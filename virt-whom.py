@@ -238,6 +238,9 @@ def main():
 
 if __name__ == '__main__':
     try:
+        if os.getuid() != 0:
+            sys.stderr.write('Error: this command requires root access to execute\n')
+            sys.exit(8)
         main()
     except (SystemExit, KeyboardInterrupt):
         raise
