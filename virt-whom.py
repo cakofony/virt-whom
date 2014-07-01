@@ -152,6 +152,9 @@ class VirtWho(object):
             for created in result['created']:
                 guests = [x['guestId'] for x in created['guestIds']]
                 logger.info("Created host: %s with guests: [%s]", created['uuid'], ", ".join(guests))
+            for unchanged in result['unchanged']:
+                guests = [x['guestId'] for x in unchanged['guestIds']]
+                logger.info("Did not modify host: %s with guests: [%s]", unchanged['uuid'], ", ".join(guests))
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception, e:
@@ -183,23 +186,6 @@ class VirtWho(object):
         """
         self.doReload = True
 
-    def reloadConfig(self):
-        try:
-            self.virt.virt.close()
-        except AttributeError:
-            pass
-        self.virt = None
-        self.subscriptionManager = None
-        try:
-            self.checkConnections()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception, e:
-            exceptionCheck(e)
-            pass
-        self.logger.debug("virt-who configution reloaded")
-        self.doReload = False
-
 
 def exceptionCheck(e):
     try:
@@ -220,7 +206,7 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    logger = log.getLogger(options.debug, False)
+    logger = log.getLogger(options.debug)
 
     virtWho = VirtWho(logger, options)
     signal.signal(signal.SIGHUP, virtWho.queueReload)
@@ -246,6 +232,6 @@ if __name__ == '__main__':
         raise
     except Exception, e:
         print e
-        logger = log.getLogger(False, False)
+        logger = log.getLogger(False)
         logger.exception("Fatal error:")
         sys.exit(1)

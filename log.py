@@ -24,7 +24,7 @@ import logging.handlers
 import os
 import sys
 
-def getLogger(debug, background):
+def getLogger(debug):
     logger = logging.getLogger("rhsm-app")
     logger.setLevel(logging.DEBUG)
 
@@ -42,24 +42,23 @@ def getLogger(debug, background):
         if debug:
             fileHandler.setLevel(logging.DEBUG)
         else:
-            fileHandler.setLevel(logging.WARNING)
+            fileHandler.setLevel(logging.INFO)
         logger.addHandler(fileHandler)
     except Exception, e:
         sys.stderr.write("Unable to log to %s: %s\n" % (path, e))
 
-    if not background:
-        streamHandler = logging.StreamHandler()
-        streamHandler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-        if debug:
-            streamHandler.setLevel(logging.DEBUG)
-        else:
-            streamHandler.setLevel(logging.WARNING)
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+    if debug:
+        streamHandler.setLevel(logging.DEBUG)
+    else:
+        streamHandler.setLevel(logging.INFO)
 
-            # Don't print exceptions to stdout in non-debug mode
-            f = logging.Filter()
-            f.filter = lambda record: record.exc_info is None
-            streamHandler.addFilter(f)
+        # Don't print exceptions to stdout in non-debug mode
+        f = logging.Filter()
+        f.filter = lambda record: record.exc_info is None
+        streamHandler.addFilter(f)
 
-        logger.addHandler(streamHandler)
+    logger.addHandler(streamHandler)
 
     return logger
