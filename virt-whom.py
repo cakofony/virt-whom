@@ -78,7 +78,9 @@ class VirtWho(object):
         Connect to the subscription manager (candlepin).
         """
         try:
-            self.subscriptionManager = SubscriptionManager(self.logger)
+            self.subscriptionManager = SubscriptionManager(self.logger,
+                self.options.username,
+                self.options.password)
             self.subscriptionManager.connect()
         except NoOptionError, e:
             self.logger.exception("Error in reading configuration file (/etc/rhsm/rhsm.conf):")
@@ -140,7 +142,7 @@ class VirtWho(object):
                 return False
 
         try:
-            owner = self.subscriptionManager.getOwner()
+            owner = self.options.org
             result = self.subscriptionManager.hypervisorCheckIn(owner, self.options.env, virtualGuests, type='manual')
 
             # Show the result of hypervisorCheckIn
@@ -203,6 +205,9 @@ def main():
     parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Enable debugging output")
     parser.add_option("-e", "--env", dest="env", default=None, help="Subscription management environment in which to create and update hypervisor consumers")
     parser.add_option("-H", "--hypervisor", action="append", dest="hypervisor", help="hypervisorID:guestId1,guestId2,guestId3")
+    parser.add_option("-u", "--username", dest="username", help="Username to authenticate with. (instead of system identity cert)")
+    parser.add_option("-p", "--password", dest="password", help="Password to authenticate with. (instead of system identity cert)")
+    parser.add_option("-o", "--org", dest="org", help="Destination organization to report to.")
 
     (options, args) = parser.parse_args()
 
@@ -227,6 +232,6 @@ if __name__ == '__main__':
         raise
     except Exception, e:
         print e
-        logger = log.getLogger(False)
+        logger = log.getLogger(True)
         logger.exception("Fatal error:")
         sys.exit(1)

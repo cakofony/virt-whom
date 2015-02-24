@@ -34,10 +34,11 @@ class SubscriptionManagerError(Exception):
 
 class SubscriptionManager:
     """ Class for interacting subscription-manager. """
-    def __init__(self, logger):
+    def __init__(self, logger, username=None, password=None):
         self.logger = logger
         self.cert_uuid = None
-        self.owner = None
+        self.username = username
+        self.password = password
 
         self.config = rhsm_config.initConfig(rhsm_config.DEFAULT_CONFIG_PATH)
         self.readConfig()
@@ -58,15 +59,24 @@ class SubscriptionManager:
 
     def connect(self, Connection=rhsm_connection.UEPConnection):
         """ Connect to the subscription-manager. """
-        self.connection = Connection(
-                host=self.config.get('server', 'hostname'),
-                ssl_port=int(self.config.get('server', 'port')),
-                handler=self.config.get('server', 'prefix'),
-                proxy_hostname=self.config.get('server', 'proxy_hostname'),
-                proxy_port=self.config.get('server', 'proxy_port'),
-                proxy_user=self.config.get('server', 'proxy_user'),
-                proxy_password=self.config.get('server', 'proxy_password'),
-                cert_file=self.cert_file, key_file=self.key_file)
+        self.logger.debug(self.config)
+        kwargs = {
+            'host': self.config.get('server', 'hostname'),
+            'ssl_port': int(self.config.get('server', 'port')),
+            'handler': self.config.get('server', 'prefix'),
+            'proxy_hostname': self.config.get('server', 'proxy_hostname'),
+            'proxy_port': self.config.get('server', 'proxy_port'),
+            'proxy_user': self.config.get('server', 'proxy_user'),
+            'proxy_password': self.config.get('server', 'proxy_password')
+        }
+        if self.username and self.password:
+            kwargs['username'] = self.username
+            kwargs['password'] = self.password
+        else:
+            kwargs['cert_file'] = self.cert_file
+            kwargs['key_file'] = self.key_file
+
+        self.connection = Connection(**kwargs)
         # Make sure that not only do we have a valid connection, but that we can also access ourselves
         if not self.connection.getConsumer(self.uuid())['uuid']:
             raise SubscriptionManagerError("Unable to obtain status from server, UEPConnection is likely not usable.")
@@ -89,7 +99,3 @@ class SubscriptionManager:
                 raise SubscriptionManagerError("Unable to open certificate %s (%s):" % (self.cert_file, str(e)))
         return self.cert_uuid
 
-    def getOwner(self):
-        if not self.owner:
-            self.owner = self.connection.getConsumer(self.uuid())['owner']['key']
-        return self.owner
