@@ -77,9 +77,6 @@ class SubscriptionManager:
             kwargs['key_file'] = self.key_file
 
         self.connection = Connection(**kwargs)
-        # Make sure that not only do we have a valid connection, but that we can also access ourselves
-        if not self.connection.getConsumer(self.uuid())['uuid']:
-            raise SubscriptionManagerError("Unable to obtain status from server, UEPConnection is likely not usable.")
 
     def hypervisorCheckIn(self, owner, env, mapping, type=None):
         """ Send hosts to guests mapping to subscription manager. """
